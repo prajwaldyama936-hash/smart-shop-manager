@@ -17,5 +17,5 @@ A simple Python-based inventory and sales management system.
 
 ## How to Run
 
-```bash
+bash
 python main.py
