@@ -3,5 +3,10 @@
         "product": "PEN",
         "quantity": 10,
         "total": 50.0
+    },
+    {
+        "product": "PENCILE",
+        "quantity": 37,
+        "total": 296.0
     }
 ]

@@ -6,5 +6,9 @@
     "BOOK": {
         "price": 50.0,
         "quantity": 20
+    },
+    "PENCILE": {
+        "price": 8.0,
+        "quantity": 63
     }
 }

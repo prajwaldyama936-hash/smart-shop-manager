@@ -2,5 +2,9 @@
     {
         "name": "Electricity",
         "amount": 100.0
+    },
+    {
+        "name": "RENT",
+        "amount": 2000.0
     }
 ]
