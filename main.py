@@ -77,6 +77,16 @@ def view_products():
         )
 
 
+def find_product(search_name):
+    search_name = search_name.strip().lower()
+
+    for name in products:
+        if name.lower() == search_name:
+            return name
+
+    return None
+
+
 def sell_product():
     name = input("Enter product name: ").strip()
 
@@ -173,16 +183,6 @@ def view_profit():
     print(f"Profit:         ₹{profit:.2f}")
 
 
-def find_product(search_name):
-    search_name = search_name.strip().lower()
-
-    for name in products:
-        if name.lower() == search_name:
-            return name
-
-    return None
-
-
 def search_product():
     search_name = input("Enter product to search: ").strip().lower()
 
@@ -220,48 +220,90 @@ def low_stock_report():
         print("No products are low in stock.")
 
 
+def dashboard():
+    total_products = len(products)
+
+    total_stock = sum(
+        data["quantity"] for data in products.values()
+    )
+
+    total_sales = sum(
+        sale["total"] for sale in sales
+    )
+
+    total_expenses = sum(
+        expense["amount"] for expense in expenses
+    )
+
+    profit = total_sales - total_expenses
+
+    low_stock_count = sum(
+        1
+        for data in products.values()
+        if data["quantity"] <= LOW_STOCK_LIMIT
+    )
+
+    print("\n")
+    print("====================================")
+    print("          SHOP DASHBOARD")
+    print("====================================")
+    print(f" Products:        {total_products}")
+    print(f" Total Stock:     {total_stock}")
+    print("------------------------------------")
+    print(f" Total Sales:     ₹{total_sales:.2f}")
+    print(f" Expenses:        ₹{total_expenses:.2f}")
+    print(f" Profit:          ₹{profit:.2f}")
+    print("------------------------------------")
+    print(f" ⚠️ Low Stock:     {low_stock_count}")
+    print("====================================")
+
+
 def main():
     while True:
         print("\n==============================")
         print("     SMART SHOP MANAGER")
         print("==============================")
-        print("1. Add product")
-        print("2. View products")
-        print("3. Sell product")
-        print("4. Add expense")
-        print("5. View expenses")
-        print("6. View profit")
-        print("7. Search product")
-        print("8. Low stock report")
-        print("9. Exit")
+        print("1. Dashboard")
+        print("2. Add product")
+        print("3. View products")
+        print("4. Sell product")
+        print("5. Add expense")
+        print("6. View expenses")
+        print("7. View profit")
+        print("8. Search product")
+        print("9. Low stock report")
+        print("10. Exit")
 
         choice = input("Choose an option: ")
 
         if choice == "1":
-            add_product()
+            dashboard()
 
         elif choice == "2":
-            view_products()
+            add_product()
 
         elif choice == "3":
-            sell_product()
+            view_products()
 
         elif choice == "4":
-            add_expense()
+            sell_product()
 
         elif choice == "5":
-            view_expenses()
+            add_expense()
 
         elif choice == "6":
-            view_profit()
+            view_expenses()
 
         elif choice == "7":
-            search_product()
+            view_profit()
 
         elif choice == "8":
-            low_stock_report()
+            search_product()
 
         elif choice == "9":
+            low_stock_report()
+
+        elif choice == "10":
             print("Thank you!")
             break
 
