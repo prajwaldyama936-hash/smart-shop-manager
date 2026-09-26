@@ -1,26 +1,30 @@
 import json
 import os
 
-DATA_FILE = "products.json"
+PRODUCT_FILE = "products.json"
+EXPENSE_FILE = "expenses.json"
+SALES_FILE = "sales.json"
 
 
-def load_products():
-    if os.path.exists(DATA_FILE):
+def load_data(filename, default):
+    if os.path.exists(filename):
         try:
-            with open(DATA_FILE, "r") as file:
+            with open(filename, "r") as file:
                 return json.load(file)
         except (json.JSONDecodeError, OSError):
-            print("Could not load saved data. Starting with empty stock.")
+            print(f"Could not load {filename}. Starting fresh.")
 
-    return {}
-
-
-def save_products():
-    with open(DATA_FILE, "w") as file:
-        json.dump(products, file, indent=4)
+    return default
 
 
-products = load_products()
+def save_data(filename, data):
+    with open(filename, "w") as file:
+        json.dump(data, file, indent=4)
+
+
+products = load_data(PRODUCT_FILE, {})
+expenses = load_data(EXPENSE_FILE, [])
+sales = load_data(SALES_FILE, [])
 
 
 def add_product():
@@ -37,12 +41,16 @@ def add_product():
         print("Invalid price or quantity.")
         return
 
+    if price < 0 or quantity < 0:
+        print("Price and quantity cannot be negative.")
+        return
+
     products[name] = {
         "price": price,
         "quantity": quantity
     }
 
-    save_products()
+    save_data(PRODUCT_FILE, products)
 
     print("Product added and saved successfully!")
 
@@ -87,10 +95,73 @@ def sell_product():
 
     total = quantity * products[name]["price"]
 
-    save_products()
+    sales.append({
+        "product": name,
+        "quantity": quantity,
+        "total": total
+    })
+
+    save_data(PRODUCT_FILE, products)
+    save_data(SALES_FILE, sales)
 
     print(f"Sale recorded. Total = ₹{total:.2f}")
     print(f"Remaining stock = {products[name]['quantity']}")
+
+
+def add_expense():
+    name = input("Enter expense name: ").strip()
+
+    try:
+        amount = float(input("Enter expense amount: "))
+    except ValueError:
+        print("Invalid amount.")
+        return
+
+    if amount < 0:
+        print("Expense cannot be negative.")
+        return
+
+    expenses.append({
+        "name": name,
+        "amount": amount
+    })
+
+    save_data(EXPENSE_FILE, expenses)
+
+    print("Expense saved successfully!")
+
+
+def view_expenses():
+    if not expenses:
+        print("\nNo expenses recorded.")
+        return
+
+    print("\n--- EXPENSES ---")
+
+    total = 0
+
+    for expense in expenses:
+        print(
+            f"{expense['name']} | "
+            f"₹{expense['amount']:.2f}"
+        )
+        total += expense["amount"]
+
+    print("----------------")
+    print(f"Total expenses: ₹{total:.2f}")
+
+
+def view_profit():
+    total_sales = sum(sale["total"] for sale in sales)
+    total_expenses = sum(expense["amount"] for expense in expenses)
+
+    profit = total_sales - total_expenses
+
+    print("\n--- PROFIT REPORT ---")
+    print(f"Total sales:    ₹{total_sales:.2f}")
+    print(f"Total expenses: ₹{total_expenses:.2f}")
+    print("-------------------------")
+    print(f"Profit:         ₹{profit:.2f}")
 
 
 def main():
@@ -101,7 +172,10 @@ def main():
         print("1. Add product")
         print("2. View products")
         print("3. Sell product")
-        print("4. Exit")
+        print("4. Add expense")
+        print("5. View expenses")
+        print("6. View profit")
+        print("7. Exit")
 
         choice = input("Choose an option: ")
 
@@ -115,6 +189,15 @@ def main():
             sell_product()
 
         elif choice == "4":
+            add_expense()
+
+        elif choice == "5":
+            view_expenses()
+
+        elif choice == "6":
+            view_profit()
+
+        elif choice == "7":
             print("Thank you!")
             break
 
