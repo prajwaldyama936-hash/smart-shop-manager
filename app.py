@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import json
 import os
+from datetime import datetime
 
 PRODUCT_FILE = "products.json"
 EXPENSE_FILE = "expenses.json"
@@ -9,10 +10,9 @@ SALES_FILE = "sales.json"
 
 LOW_STOCK_LIMIT = 5
 
-
-# =========================
+# =========================================================
 # DATA FUNCTIONS
-# =========================
+# =========================================================
 
 def load_data(filename, default):
     if os.path.exists(filename):
@@ -34,34 +34,66 @@ expenses = load_data(EXPENSE_FILE, [])
 sales = load_data(SALES_FILE, [])
 
 
-# =========================
+# =========================================================
 # MAIN WINDOW
-# =========================
+# =========================================================
 
 root = tk.Tk()
 root.title("Smart Shop Manager")
-root.geometry("1000x650")
-root.minsize(850, 550)
+root.geometry("1100x700")
+root.minsize(950, 600)
+
+BG = "#f4f6f8"
+SIDEBAR = "#202938"
+CARD = "#ffffff"
+TEXT = "#1f2937"
+MUTED = "#6b7280"
+
+root.configure(bg=BG)
 
 
-# =========================
+# =========================================================
+# MAIN CONTENT
+# =========================================================
+
+content = tk.Frame(
+    root,
+    bg=BG
+)
+
+content.pack(
+    side="right",
+    fill="both",
+    expand=True
+)
+
+
+def clear_content():
+    for widget in content.winfo_children():
+        widget.destroy()
+
+
+# =========================================================
 # DASHBOARD
-# =========================
+# =========================================================
 
-def refresh_dashboard():
+def get_dashboard_data():
 
     total_products = len(products)
 
     total_stock = sum(
-        item["quantity"] for item in products.values()
+        item["quantity"]
+        for item in products.values()
     )
 
     total_sales = sum(
-        item["total"] for item in sales
+        item.get("total", 0)
+        for item in sales
     )
 
     total_expenses = sum(
-        item["amount"] for item in expenses
+        item.get("amount", 0)
+        for item in expenses
     )
 
     profit = total_sales - total_expenses
@@ -72,104 +104,234 @@ def refresh_dashboard():
         if item["quantity"] <= LOW_STOCK_LIMIT
     )
 
-    products_value_label.config(
-        text=str(total_products)
-    )
-
-    stock_value_label.config(
-        text=str(total_stock)
-    )
-
-    sales_value_label.config(
-        text=f"₹{total_sales:.2f}"
-    )
-
-    expenses_value_label.config(
-        text=f"₹{total_expenses:.2f}"
-    )
-
-    profit_value_label.config(
-        text=f"₹{profit:.2f}"
-    )
-
-    low_stock_value_label.config(
-        text=str(low_stock)
+    return (
+        total_products,
+        total_stock,
+        total_sales,
+        total_expenses,
+        profit,
+        low_stock
     )
 
 
-def clear_content():
+def create_card(parent, title, value):
 
-    for widget in content.winfo_children():
-        widget.destroy()
+    card = tk.Frame(
+        parent,
+        bg=CARD,
+        width=220,
+        height=130,
+        highlightbackground="#d9dde3",
+        highlightthickness=1
+    )
+
+    card.pack(
+        side="left",
+        padx=10
+    )
+
+    card.pack_propagate(False)
+
+    tk.Label(
+        card,
+        text=title,
+        font=("Arial", 12),
+        bg=CARD,
+        fg=MUTED
+    ).pack(
+        pady=(20, 5)
+    )
+
+    tk.Label(
+        card,
+        text=value,
+        font=("Arial", 22, "bold"),
+        bg=CARD,
+        fg=TEXT
+    ).pack()
 
 
-# =========================
+def show_dashboard():
+
+    clear_content()
+
+    (
+        total_products,
+        total_stock,
+        total_sales,
+        total_expenses,
+        profit,
+        low_stock
+    ) = get_dashboard_data()
+
+    header = tk.Frame(
+        content,
+        bg=BG
+    )
+
+    header.pack(
+        fill="x",
+        padx=35,
+        pady=(30, 10)
+    )
+
+    tk.Label(
+        header,
+        text="Dashboard",
+        font=("Arial", 28, "bold"),
+        bg=BG,
+        fg=TEXT
+    ).pack(
+        anchor="w"
+    )
+
+    tk.Label(
+        header,
+        text="Overview of your shop",
+        font=("Arial", 12),
+        bg=BG,
+        fg=MUTED
+    ).pack(
+        anchor="w",
+        pady=5
+    )
+
+    row1 = tk.Frame(
+        content,
+        bg=BG
+    )
+
+    row1.pack(
+        pady=20
+    )
+
+    create_card(
+        row1,
+        "Products",
+        str(total_products)
+    )
+
+    create_card(
+        row1,
+        "Total Stock",
+        str(total_stock)
+    )
+
+    create_card(
+        row1,
+        "Total Sales",
+        f"₹{total_sales:.2f}"
+    )
+
+    row2 = tk.Frame(
+        content,
+        bg=BG
+    )
+
+    row2.pack(
+        pady=10
+    )
+
+    create_card(
+        row2,
+        "Expenses",
+        f"₹{total_expenses:.2f}"
+    )
+
+    create_card(
+        row2,
+        "Profit",
+        f"₹{profit:.2f}"
+    )
+
+    create_card(
+        row2,
+        "Low Stock",
+        str(low_stock)
+    )
+
+
+# =========================================================
 # ADD PRODUCT
-# =========================
+# =========================================================
 
 def add_product_gui():
 
     window = tk.Toplevel(root)
     window.title("Add Product")
-    window.geometry("400x350")
+    window.geometry("420x380")
+    window.configure(bg=BG)
 
     tk.Label(
         window,
         text="Add New Product",
-        font=("Arial", 20, "bold")
-    ).pack(pady=20)
+        font=("Arial", 20, "bold"),
+        bg=BG,
+        fg=TEXT
+    ).pack(
+        pady=25
+    )
 
     tk.Label(
         window,
-        text="Product Name"
+        text="Product Name",
+        bg=BG
     ).pack()
 
     name_entry = tk.Entry(
         window,
-        width=30
+        width=30,
+        font=("Arial", 12)
     )
 
-    name_entry.pack(pady=5)
+    name_entry.pack(
+        pady=7
+    )
 
     tk.Label(
         window,
-        text="Price"
+        text="Price",
+        bg=BG
     ).pack()
 
     price_entry = tk.Entry(
         window,
-        width=30
+        width=30,
+        font=("Arial", 12)
     )
 
-    price_entry.pack(pady=5)
+    price_entry.pack(
+        pady=7
+    )
 
     tk.Label(
         window,
-        text="Quantity"
+        text="Quantity",
+        bg=BG
     ).pack()
 
     quantity_entry = tk.Entry(
         window,
-        width=30
+        width=30,
+        font=("Arial", 12)
     )
 
-    quantity_entry.pack(pady=5)
+    quantity_entry.pack(
+        pady=7
+    )
 
     def add():
 
         name = name_entry.get().strip()
 
         if not name:
-
             messagebox.showerror(
                 "Error",
                 "Enter a product name."
             )
-
             return
 
         try:
-
             price = float(
                 price_entry.get()
             )
@@ -191,7 +353,7 @@ def add_product_gui():
 
             messagebox.showerror(
                 "Error",
-                "Price and quantity cannot be negative."
+                "Values cannot be negative."
             )
 
             return
@@ -213,86 +375,302 @@ def add_product_gui():
 
         window.destroy()
 
-        refresh_dashboard()
+        show_dashboard()
 
     tk.Button(
         window,
         text="ADD PRODUCT",
         command=add,
-        width=20,
+        width=22,
         height=2
-    ).pack(pady=20)
+    ).pack(
+        pady=25
+    )
 
 
-# =========================
-# RECORD SALE
-# =========================
+# =========================================================
+# EDIT PRODUCT
+# =========================================================
 
-def record_sale_gui():
+def edit_product_gui():
 
     if not products:
 
         messagebox.showwarning(
             "No Products",
-            "Please add a product first."
+            "There are no products to edit."
         )
 
         return
 
     window = tk.Toplevel(root)
-    window.title("Record Sale")
-    window.geometry("450x350")
 
-    tk.Label(
-        window,
-        text="Record Sale",
-        font=("Arial", 20, "bold")
-    ).pack(pady=20)
+    window.title("Edit Product")
 
-    tk.Label(
-        window,
-        text="Select Product"
-    ).pack()
+    window.geometry("450x430")
 
-    product_names = list(
-        products.keys()
+    window.configure(
+        bg=BG
     )
+
+    tk.Label(
+        window,
+        text="Edit Product",
+        font=("Arial", 20, "bold"),
+        bg=BG,
+        fg=TEXT
+    ).pack(
+        pady=25
+    )
+
+    tk.Label(
+        window,
+        text="Select Product",
+        bg=BG
+    ).pack()
 
     product_box = ttk.Combobox(
         window,
-        values=product_names,
+        values=list(products.keys()),
         state="readonly",
         width=30
     )
 
-    product_box.pack(pady=10)
+    product_box.pack(
+        pady=10
+    )
 
     product_box.current(0)
 
     tk.Label(
         window,
-        text="Quantity Sold"
+        text="New Price",
+        bg=BG
+    ).pack()
+
+    price_entry = tk.Entry(
+        window,
+        width=30,
+        font=("Arial", 12)
+    )
+
+    price_entry.pack(
+        pady=8
+    )
+
+    tk.Label(
+        window,
+        text="New Quantity",
+        bg=BG
     ).pack()
 
     quantity_entry = tk.Entry(
         window,
-        width=30
+        width=30,
+        font=("Arial", 12)
     )
 
-    quantity_entry.pack(pady=10)
+    quantity_entry.pack(
+        pady=8
+    )
 
-    def record():
+    def load_product(event=None):
 
-        product_name = product_box.get()
+        name = product_box.get()
 
-        if not product_name:
+        price_entry.delete(
+            0,
+            tk.END
+        )
+
+        quantity_entry.delete(
+            0,
+            tk.END
+        )
+
+        price_entry.insert(
+            0,
+            products[name]["price"]
+        )
+
+        quantity_entry.insert(
+            0,
+            products[name]["quantity"]
+        )
+
+    product_box.bind(
+        "<<ComboboxSelected>>",
+        load_product
+    )
+
+    load_product()
+
+    def save_changes():
+
+        name = product_box.get()
+
+        try:
+
+            price = float(
+                price_entry.get()
+            )
+
+            quantity = int(
+                quantity_entry.get()
+            )
+
+        except ValueError:
 
             messagebox.showerror(
                 "Error",
-                "Select a product."
+                "Enter valid values."
             )
 
             return
+
+        if price < 0 or quantity < 0:
+
+            messagebox.showerror(
+                "Error",
+                "Values cannot be negative."
+            )
+
+            return
+
+        products[name]["price"] = price
+
+        products[name]["quantity"] = quantity
+
+        save_data(
+            PRODUCT_FILE,
+            products
+        )
+
+        messagebox.showinfo(
+            "Success",
+            f"{name} updated successfully!"
+        )
+
+        window.destroy()
+
+        show_dashboard()
+
+    tk.Button(
+        window,
+        text="SAVE CHANGES",
+        command=save_changes,
+        width=22,
+        height=2
+    ).pack(
+        pady=25
+    )
+
+
+# =========================================================
+# RESTOCK
+# =========================================================
+
+def restock_product_gui():
+
+    if not products:
+
+        messagebox.showwarning(
+            "No Products",
+            "Add a product first."
+        )
+
+        return
+
+    window = tk.Toplevel(root)
+
+    window.title(
+        "Restock Product"
+    )
+
+    window.geometry(
+        "430x350"
+    )
+
+    window.configure(
+        bg=BG
+    )
+
+    tk.Label(
+        window,
+        text="Restock Product",
+        font=("Arial", 20, "bold"),
+        bg=BG,
+        fg=TEXT
+    ).pack(
+        pady=25
+    )
+
+    tk.Label(
+        window,
+        text="Select Product",
+        bg=BG
+    ).pack()
+
+    product_box = ttk.Combobox(
+        window,
+        values=list(products.keys()),
+        state="readonly",
+        width=30
+    )
+
+    product_box.pack(
+        pady=10
+    )
+
+    product_box.current(0)
+
+    stock_label = tk.Label(
+        window,
+        text="",
+        bg=BG,
+        fg=MUTED
+    )
+
+    stock_label.pack(
+        pady=5
+    )
+
+    def update_stock_label(event=None):
+
+        name = product_box.get()
+
+        stock_label.config(
+            text=f"Current stock: {products[name]['quantity']}"
+        )
+
+    product_box.bind(
+        "<<ComboboxSelected>>",
+        update_stock_label
+    )
+
+    update_stock_label()
+
+    tk.Label(
+        window,
+        text="Quantity to Add",
+        bg=BG
+    ).pack(
+        pady=(15, 0)
+    )
+
+    quantity_entry = tk.Entry(
+        window,
+        width=30,
+        font=("Arial", 12)
+    )
+
+    quantity_entry.pack(
+        pady=10
+    )
+
+    def restock():
+
+        name = product_box.get()
 
         try:
 
@@ -304,7 +682,7 @@ def record_sale_gui():
 
             messagebox.showerror(
                 "Error",
-                "Quantity must be a whole number."
+                "Enter a valid quantity."
             )
 
             return
@@ -318,268 +696,133 @@ def record_sale_gui():
 
             return
 
-        available = products[
-            product_name
-        ]["quantity"]
-
-        if quantity > available:
-
-            messagebox.showerror(
-                "Not Enough Stock",
-                f"Only {available} units available."
-            )
-
-            return
-
-        price = products[
-            product_name
-        ]["price"]
-
-        total = price * quantity
-
-        products[
-            product_name
-        ]["quantity"] -= quantity
-
-        sales.append({
-            "product": product_name,
-            "quantity": quantity,
-            "total": total
-        })
+        products[name]["quantity"] += quantity
 
         save_data(
             PRODUCT_FILE,
             products
         )
 
-        save_data(
-            SALES_FILE,
-            sales
-        )
-
-        messagebox.showinfo(
-            "Sale Recorded",
-            f"Sale successful!\n\n"
-            f"Product: {product_name}\n"
-            f"Quantity: {quantity}\n"
-            f"Total: ₹{total:.2f}\n\n"
-            f"Remaining stock: "
-            f"{products[product_name]['quantity']}"
-        )
-
-        window.destroy()
-
-        refresh_dashboard()
-
-    tk.Button(
-        window,
-        text="RECORD SALE",
-        command=record,
-        width=20,
-        height=2
-    ).pack(pady=20)
-
-
-# =========================
-# ADD EXPENSE
-# =========================
-
-def add_expense_gui():
-
-    window = tk.Toplevel(root)
-    window.title("Add Expense")
-    window.geometry("400x300")
-
-    tk.Label(
-        window,
-        text="Add Expense",
-        font=("Arial", 20, "bold")
-    ).pack(pady=20)
-
-    tk.Label(
-        window,
-        text="Expense Name"
-    ).pack()
-
-    name_entry = tk.Entry(
-        window,
-        width=30
-    )
-
-    name_entry.pack(pady=8)
-
-    tk.Label(
-        window,
-        text="Amount"
-    ).pack()
-
-    amount_entry = tk.Entry(
-        window,
-        width=30
-    )
-
-    amount_entry.pack(pady=8)
-
-    def add():
-
-        name = name_entry.get().strip()
-
-        if not name:
-
-            messagebox.showerror(
-                "Error",
-                "Enter an expense name."
-            )
-
-            return
-
-        try:
-
-            amount = float(
-                amount_entry.get()
-            )
-
-        except ValueError:
-
-            messagebox.showerror(
-                "Error",
-                "Amount must be a number."
-            )
-
-            return
-
-        if amount <= 0:
-
-            messagebox.showerror(
-                "Error",
-                "Amount must be greater than zero."
-            )
-
-            return
-
-        expenses.append({
-            "name": name,
-            "amount": amount
-        })
-
-        save_data(
-            EXPENSE_FILE,
-            expenses
-        )
-
         messagebox.showinfo(
             "Success",
-            f"Expense added!\n\n"
-            f"{name}: ₹{amount:.2f}"
+            f"{name} restocked by {quantity} units."
         )
 
         window.destroy()
 
-        refresh_dashboard()
+        show_dashboard()
 
     tk.Button(
         window,
-        text="ADD EXPENSE",
-        command=add,
-        width=20,
+        text="RESTOCK",
+        command=restock,
+        width=22,
         height=2
-    ).pack(pady=20)
+    ).pack(
+        pady=20
+    )
 
 
-# =========================
-# DASHBOARD SCREEN
-# =========================
+# =========================================================
+# DELETE PRODUCT
+# =========================================================
 
-def show_dashboard():
+def delete_product_gui():
 
-    clear_content()
+    if not products:
+
+        messagebox.showwarning(
+            "No Products",
+            "There are no products to delete."
+        )
+
+        return
+
+    window = tk.Toplevel(root)
+
+    window.title(
+        "Delete Product"
+    )
+
+    window.geometry(
+        "430x300"
+    )
+
+    window.configure(
+        bg=BG
+    )
 
     tk.Label(
-        content,
-        text="Dashboard",
-        font=("Arial", 24, "bold")
-    ).pack(pady=20)
-
-    cards_frame = tk.Frame(content)
-
-    cards_frame.pack(pady=20)
-
-    create_card(
-        cards_frame,
-        "Products",
-        products_value_label
+        window,
+        text="Delete Product",
+        font=("Arial", 20, "bold"),
+        bg=BG,
+        fg=TEXT
+    ).pack(
+        pady=25
     )
-
-    create_card(
-        cards_frame,
-        "Total Stock",
-        stock_value_label
-    )
-
-    create_card(
-        cards_frame,
-        "Sales",
-        sales_value_label
-    )
-
-    second_frame = tk.Frame(content)
-
-    second_frame.pack(pady=20)
-
-    create_card(
-        second_frame,
-        "Expenses",
-        expenses_value_label
-    )
-
-    create_card(
-        second_frame,
-        "Profit",
-        profit_value_label
-    )
-
-    create_card(
-        second_frame,
-        "Low Stock",
-        low_stock_value_label
-    )
-
-    refresh_dashboard()
-
-
-def create_card(
-    parent,
-    title,
-    value_label
-):
-
-    card = tk.Frame(
-        parent,
-        relief="solid",
-        borderwidth=1,
-        width=200,
-        height=120
-    )
-
-    card.pack(
-        side="left",
-        padx=10
-    )
-
-    card.pack_propagate(False)
 
     tk.Label(
-        card,
-        text=title,
-        font=("Arial", 13, "bold")
-    ).pack(pady=10)
+        window,
+        text="Select Product",
+        bg=BG
+    ).pack()
 
-    value_label.pack()
+    product_box = ttk.Combobox(
+        window,
+        values=list(products.keys()),
+        state="readonly",
+        width=30
+    )
+
+    product_box.pack(
+        pady=15
+    )
+
+    product_box.current(0)
+
+    def delete():
+
+        name = product_box.get()
+
+        confirm = messagebox.askyesno(
+            "Confirm Delete",
+            f"Are you sure you want to delete '{name}'?"
+        )
+
+        if not confirm:
+            return
+
+        del products[name]
+
+        save_data(
+            PRODUCT_FILE,
+            products
+        )
+
+        messagebox.showinfo(
+            "Deleted",
+            f"{name} deleted successfully."
+        )
+
+        window.destroy()
+
+        show_dashboard()
+
+    tk.Button(
+        window,
+        text="DELETE PRODUCT",
+        command=delete,
+        width=22,
+        height=2
+    ).pack(
+        pady=20
+    )
 
 
-# =========================
-# PRODUCTS SCREEN
-# =========================
+# =========================================================
+# PRODUCTS
+# =========================================================
 
 def show_products():
 
@@ -588,8 +831,14 @@ def show_products():
     tk.Label(
         content,
         text="Products",
-        font=("Arial", 24, "bold")
-    ).pack(pady=15)
+        font=("Arial", 26, "bold"),
+        bg=BG,
+        fg=TEXT
+    ).pack(
+        anchor="w",
+        padx=35,
+        pady=25
+    )
 
     table = ttk.Treeview(
         content,
@@ -618,23 +867,23 @@ def show_products():
 
     table.column(
         "name",
-        width=300
+        width=350
     )
 
     table.column(
         "price",
-        width=150
+        width=200
     )
 
     table.column(
         "stock",
-        width=150
+        width=200
     )
 
     table.pack(
         fill="both",
         expand=True,
-        padx=30,
+        padx=35,
         pady=10
     )
 
@@ -650,10 +899,346 @@ def show_products():
             )
         )
 
+    button_frame = tk.Frame(
+        content,
+        bg=BG
+    )
 
-# =========================
-# SALES SCREEN
-# =========================
+    button_frame.pack(
+        pady=15
+    )
+
+    tk.Button(
+        button_frame,
+        text="EDIT",
+        command=edit_product_gui,
+        width=15,
+        height=2
+    ).pack(
+        side="left",
+        padx=5
+    )
+
+    tk.Button(
+        button_frame,
+        text="RESTOCK",
+        command=restock_product_gui,
+        width=15,
+        height=2
+    ).pack(
+        side="left",
+        padx=5
+    )
+
+    tk.Button(
+        button_frame,
+        text="DELETE",
+        command=delete_product_gui,
+        width=15,
+        height=2
+    ).pack(
+        side="left",
+        padx=5
+    )
+
+
+# =========================================================
+# RECORD SALE + RECEIPT
+# =========================================================
+
+def record_sale_gui():
+
+    if not products:
+
+        messagebox.showwarning(
+            "No Products",
+            "Add a product first."
+        )
+
+        return
+
+    window = tk.Toplevel(root)
+
+    window.title(
+        "Record Sale"
+    )
+
+    window.geometry(
+        "500x550"
+    )
+
+    window.configure(
+        bg=BG
+    )
+
+    tk.Label(
+        window,
+        text="Record Sale",
+        font=("Arial", 22, "bold"),
+        bg=BG,
+        fg=TEXT
+    ).pack(
+        pady=20
+    )
+
+    tk.Label(
+        window,
+        text="Customer Name",
+        bg=BG
+    ).pack()
+
+    customer_entry = tk.Entry(
+        window,
+        width=32,
+        font=("Arial", 12)
+    )
+
+    customer_entry.pack(
+        pady=7
+    )
+
+    tk.Label(
+        window,
+        text="Customer Phone",
+        bg=BG
+    ).pack()
+
+    phone_entry = tk.Entry(
+        window,
+        width=32,
+        font=("Arial", 12)
+    )
+
+    phone_entry.pack(
+        pady=7
+    )
+
+    tk.Label(
+        window,
+        text="Product",
+        bg=BG
+    ).pack(
+        pady=(10, 0)
+    )
+
+    product_box = ttk.Combobox(
+        window,
+        values=list(products.keys()),
+        state="readonly",
+        width=30
+    )
+
+    product_box.pack(
+        pady=7
+    )
+
+    product_box.current(0)
+
+    tk.Label(
+        window,
+        text="Quantity",
+        bg=BG
+    ).pack()
+
+    quantity_entry = tk.Entry(
+        window,
+        width=32,
+        font=("Arial", 12)
+    )
+
+    quantity_entry.pack(
+        pady=7
+    )
+
+    def record():
+
+        customer = customer_entry.get().strip()
+
+        phone = phone_entry.get().strip()
+
+        product_name = product_box.get()
+
+        if not customer:
+
+            messagebox.showerror(
+                "Error",
+                "Enter customer name."
+            )
+
+            return
+
+        if not phone:
+
+            messagebox.showerror(
+                "Error",
+                "Enter customer phone."
+            )
+
+            return
+
+        try:
+
+            quantity = int(
+                quantity_entry.get()
+            )
+
+        except ValueError:
+
+            messagebox.showerror(
+                "Error",
+                "Enter a valid quantity."
+            )
+
+            return
+
+        if quantity <= 0:
+
+            messagebox.showerror(
+                "Error",
+                "Quantity must be greater than zero."
+            )
+
+            return
+
+        available = products[
+            product_name
+        ]["quantity"]
+
+        if quantity > available:
+
+            messagebox.showerror(
+                "Stock Error",
+                f"Only {available} units available."
+            )
+
+            return
+
+        price = products[
+            product_name
+        ]["price"]
+
+        total = price * quantity
+
+        receipt_number = len(sales) + 1
+
+        date_time = datetime.now().strftime(
+            "%d-%m-%Y %H:%M:%S"
+        )
+
+        products[
+            product_name
+        ]["quantity"] -= quantity
+
+        sale = {
+
+            "receipt": receipt_number,
+
+            "customer": customer,
+
+            "phone": phone,
+
+            "product": product_name,
+
+            "quantity": quantity,
+
+            "price": price,
+
+            "total": total,
+
+            "date": date_time
+        }
+
+        sales.append(sale)
+
+        save_data(
+            PRODUCT_FILE,
+            products
+        )
+
+        save_data(
+            SALES_FILE,
+            sales
+        )
+
+        receipt_window = tk.Toplevel(
+            root
+        )
+
+        receipt_window.title(
+            f"Receipt #{receipt_number}"
+        )
+
+        receipt_window.geometry(
+            "450x500"
+        )
+
+        receipt_window.configure(
+            bg="white"
+        )
+
+        receipt_text = f"""
+================================
+       SMART SHOP MANAGER
+================================
+
+Receipt No: {receipt_number:04d}
+Date: {date_time}
+
+Customer: {customer}
+Phone: {phone}
+
+--------------------------------
+Product : {product_name}
+Quantity: {quantity}
+Price   : ₹{price:.2f}
+--------------------------------
+
+TOTAL: ₹{total:.2f}
+
+================================
+          THANK YOU!
+================================
+"""
+
+        tk.Label(
+            receipt_window,
+            text=receipt_text,
+            font=("Courier New", 11),
+            bg="white",
+            justify="left"
+        ).pack(
+            padx=20,
+            pady=20
+        )
+
+        tk.Button(
+            receipt_window,
+            text="CLOSE RECEIPT",
+            command=receipt_window.destroy,
+            width=20,
+            height=2
+        ).pack(
+            pady=10
+        )
+
+        window.destroy()
+
+        show_dashboard()
+
+    tk.Button(
+        window,
+        text="GENERATE RECEIPT",
+        command=record,
+        width=25,
+        height=2
+    ).pack(
+        pady=25
+    )
+
+
+# =========================================================
+# SALES HISTORY
+# =========================================================
 
 def show_sales():
 
@@ -661,18 +1246,37 @@ def show_sales():
 
     tk.Label(
         content,
-        text="Sales",
-        font=("Arial", 24, "bold")
-    ).pack(pady=15)
+        text="Sales History",
+        font=("Arial", 26, "bold"),
+        bg=BG,
+        fg=TEXT
+    ).pack(
+        anchor="w",
+        padx=35,
+        pady=25
+    )
 
     table = ttk.Treeview(
         content,
         columns=(
+            "receipt",
+            "customer",
             "product",
             "quantity",
-            "total"
+            "total",
+            "date"
         ),
         show="headings"
+    )
+
+    table.heading(
+        "receipt",
+        text="Receipt"
+    )
+
+    table.heading(
+        "customer",
+        text="Customer"
     )
 
     table.heading(
@@ -690,10 +1294,45 @@ def show_sales():
         text="Total"
     )
 
+    table.heading(
+        "date",
+        text="Date"
+    )
+
+    table.column(
+        "receipt",
+        width=80
+    )
+
+    table.column(
+        "customer",
+        width=150
+    )
+
+    table.column(
+        "product",
+        width=150
+    )
+
+    table.column(
+        "quantity",
+        width=80
+    )
+
+    table.column(
+        "total",
+        width=100
+    )
+
+    table.column(
+        "date",
+        width=160
+    )
+
     table.pack(
         fill="both",
         expand=True,
-        padx=30,
+        padx=25,
         pady=10
     )
 
@@ -703,16 +1342,175 @@ def show_sales():
             "",
             "end",
             values=(
-                sale["product"],
-                sale["quantity"],
-                f"₹{sale['total']:.2f}"
+                sale.get(
+                    "receipt",
+                    "-"
+                ),
+
+                sale.get(
+                    "customer",
+                    "Old Customer"
+                ),
+
+                sale.get(
+                    "product",
+                    "-"
+                ),
+
+                sale.get(
+                    "quantity",
+                    0
+                ),
+
+                f"₹{sale.get('total', 0):.2f}",
+
+                sale.get(
+                    "date",
+                    "-"
+                )
             )
         )
 
 
-# =========================
-# EXPENSE SCREEN
-# =========================
+# =========================================================
+# ADD EXPENSE
+# =========================================================
+
+def add_expense_gui():
+
+    window = tk.Toplevel(root)
+
+    window.title(
+        "Add Expense"
+    )
+
+    window.geometry(
+        "420x330"
+    )
+
+    window.configure(
+        bg=BG
+    )
+
+    tk.Label(
+        window,
+        text="Add Expense",
+        font=("Arial", 20, "bold"),
+        bg=BG,
+        fg=TEXT
+    ).pack(
+        pady=25
+    )
+
+    tk.Label(
+        window,
+        text="Expense Name",
+        bg=BG
+    ).pack()
+
+    name_entry = tk.Entry(
+        window,
+        width=30,
+        font=("Arial", 12)
+    )
+
+    name_entry.pack(
+        pady=8
+    )
+
+    tk.Label(
+        window,
+        text="Amount",
+        bg=BG
+    ).pack()
+
+    amount_entry = tk.Entry(
+        window,
+        width=30,
+        font=("Arial", 12)
+    )
+
+    amount_entry.pack(
+        pady=8
+    )
+
+    def add():
+
+        name = name_entry.get().strip()
+
+        if not name:
+
+            messagebox.showerror(
+                "Error",
+                "Enter expense name."
+            )
+
+            return
+
+        try:
+
+            amount = float(
+                amount_entry.get()
+            )
+
+        except ValueError:
+
+            messagebox.showerror(
+                "Error",
+                "Enter a valid amount."
+            )
+
+            return
+
+        if amount <= 0:
+
+            messagebox.showerror(
+                "Error",
+                "Amount must be greater than zero."
+            )
+
+            return
+
+        expenses.append({
+
+            "name": name,
+
+            "amount": amount,
+
+            "date": datetime.now().strftime(
+                "%d-%m-%Y %H:%M:%S"
+            )
+
+        })
+
+        save_data(
+            EXPENSE_FILE,
+            expenses
+        )
+
+        messagebox.showinfo(
+            "Success",
+            "Expense added successfully!"
+        )
+
+        window.destroy()
+
+        show_dashboard()
+
+    tk.Button(
+        window,
+        text="ADD EXPENSE",
+        command=add,
+        width=22,
+        height=2
+    ).pack(
+        pady=25
+    )
+
+
+# =========================================================
+# EXPENSE HISTORY
+# =========================================================
 
 def show_expenses():
 
@@ -720,15 +1518,22 @@ def show_expenses():
 
     tk.Label(
         content,
-        text="Expenses",
-        font=("Arial", 24, "bold")
-    ).pack(pady=15)
+        text="Expense History",
+        font=("Arial", 26, "bold"),
+        bg=BG,
+        fg=TEXT
+    ).pack(
+        anchor="w",
+        padx=35,
+        pady=25
+    )
 
     table = ttk.Treeview(
         content,
         columns=(
             "name",
-            "amount"
+            "amount",
+            "date"
         ),
         show="headings"
     )
@@ -743,20 +1548,15 @@ def show_expenses():
         text="Amount"
     )
 
-    table.column(
-        "name",
-        width=300
-    )
-
-    table.column(
-        "amount",
-        width=200
+    table.heading(
+        "date",
+        text="Date"
     )
 
     table.pack(
         fill="both",
         expand=True,
-        padx=30,
+        padx=35,
         pady=10
     )
 
@@ -766,27 +1566,37 @@ def show_expenses():
             "",
             "end",
             values=(
-                expense["name"],
-                f"₹{expense['amount']:.2f}"
+
+                expense.get(
+                    "name",
+                    "-"
+                ),
+
+                f"₹{expense.get('amount', 0):.2f}",
+
+                expense.get(
+                    "date",
+                    "-"
+                )
             )
         )
 
 
-# =========================
-# PROFIT SCREEN
-# =========================
+# =========================================================
+# PROFIT
+# =========================================================
 
 def show_profit():
 
     clear_content()
 
     total_sales = sum(
-        item["total"]
+        item.get("total", 0)
         for item in sales
     )
 
     total_expenses = sum(
-        item["amount"]
+        item.get("amount", 0)
         for item in expenses
     )
 
@@ -795,31 +1605,335 @@ def show_profit():
     tk.Label(
         content,
         text="Profit Report",
-        font=("Arial", 24, "bold")
-    ).pack(pady=30)
+        font=("Arial", 26, "bold"),
+        bg=BG,
+        fg=TEXT
+    ).pack(
+        pady=35
+    )
 
     tk.Label(
         content,
-        text=f"Total Sales: ₹{total_sales:.2f}",
-        font=("Arial", 18)
-    ).pack(pady=10)
+        text=f"Total Sales\n₹{total_sales:.2f}",
+        font=("Arial", 20),
+        bg=BG,
+        fg=TEXT
+    ).pack(
+        pady=15
+    )
 
     tk.Label(
         content,
-        text=f"Total Expenses: ₹{total_expenses:.2f}",
-        font=("Arial", 18)
-    ).pack(pady=10)
+        text=f"Total Expenses\n₹{total_expenses:.2f}",
+        font=("Arial", 20),
+        bg=BG,
+        fg=TEXT
+    ).pack(
+        pady=15
+    )
 
     tk.Label(
         content,
-        text=f"Profit: ₹{profit:.2f}",
-        font=("Arial", 22, "bold")
-    ).pack(pady=20)
+        text=f"NET PROFIT\n₹{profit:.2f}",
+        font=("Arial", 25, "bold"),
+        bg=BG,
+        fg=TEXT
+    ).pack(
+        pady=25
+    )
+
+# =========================================================
+# SALES ANALYTICS
+# =========================================================
+
+def show_analytics():
+
+    clear_content()
+
+    total_revenue = sum(
+        sale.get("total", 0)
+        for sale in sales
+    )
+
+    total_transactions = len(sales)
+
+    total_units = sum(
+        sale.get("quantity", 0)
+        for sale in sales
+    )
+
+    total_expenses = sum(
+        expense.get("amount", 0)
+        for expense in expenses
+    )
+
+    profit = total_revenue - total_expenses
+
+    if total_transactions > 0:
+        average_sale = (
+            total_revenue / total_transactions
+        )
+    else:
+        average_sale = 0
+
+    # Best-selling product
+    product_sales = {}
+
+    for sale in sales:
+
+        product = sale.get(
+            "product",
+            "Unknown"
+        )
+
+        quantity = sale.get(
+            "quantity",
+            0
+        )
+
+        product_sales[product] = (
+            product_sales.get(product, 0)
+            + quantity
+        )
+
+    if product_sales:
+
+        best_product = max(
+            product_sales,
+            key=product_sales.get
+        )
+
+        best_quantity = product_sales[
+            best_product
+        ]
+
+    else:
+
+        best_product = "No sales yet"
+        best_quantity = 0
+
+    # Today's sales
+    today = datetime.now().strftime(
+        "%d-%m-%Y"
+    )
+
+    today_sales = 0
+
+    for sale in sales:
+
+        sale_date = sale.get(
+            "date",
+            ""
+        )
+
+        if sale_date.startswith(today):
+
+            today_sales += sale.get(
+                "total",
+                0
+            )
+
+    # Header
+
+    tk.Label(
+        content,
+        text="Sales Analytics",
+        font=("Arial", 28, "bold"),
+        bg=BG,
+        fg=TEXT
+    ).pack(
+        anchor="w",
+        padx=35,
+        pady=(30, 5)
+    )
+
+    tk.Label(
+        content,
+        text="Business performance overview",
+        font=("Arial", 12),
+        bg=BG,
+        fg=MUTED
+    ).pack(
+        anchor="w",
+        padx=35
+    )
+
+    # Cards
+
+    cards = tk.Frame(
+        content,
+        bg=BG
+    )
+
+    cards.pack(
+        pady=30
+    )
+
+    create_card(
+        cards,
+        "Total Revenue",
+        f"₹{total_revenue:.2f}"
+    )
+
+    create_card(
+        cards,
+        "Transactions",
+        str(total_transactions)
+    )
+
+    create_card(
+        cards,
+        "Units Sold",
+        str(total_units)
+    )
+
+    row2 = tk.Frame(
+        content,
+        bg=BG
+    )
+
+    row2.pack(
+        pady=10
+    )
+
+    create_card(
+        row2,
+        "Today's Sales",
+        f"₹{today_sales:.2f}"
+    )
+
+    create_card(
+        row2,
+        "Average Sale",
+        f"₹{average_sale:.2f}"
+    )
+
+    create_card(
+        row2,
+        "Profit",
+        f"₹{profit:.2f}"
+    )
+
+    # Best seller section
+
+    best_frame = tk.Frame(
+        content,
+        bg=CARD,
+        highlightbackground="#d9dde3",
+        highlightthickness=1
+    )
+
+    best_frame.pack(
+        fill="x",
+        padx=35,
+        pady=25
+    )
+
+    tk.Label(
+        best_frame,
+        text="🏆 Best-Selling Product",
+        font=("Arial", 16, "bold"),
+        bg=CARD,
+        fg=TEXT
+    ).pack(
+        pady=(20, 8)
+    )
+
+    tk.Label(
+        best_frame,
+        text=(
+            f"{best_product}  —  "
+            f"{best_quantity} units sold"
+        ),
+        font=("Arial", 18),
+        bg=CARD,
+        fg=TEXT
+    ).pack(
+        pady=(0, 20)
+    )
+# =========================================================
+# SEARCH
+# =========================================================
+
+def search_product():
+
+    window = tk.Toplevel(root)
+
+    window.title(
+        "Search Product"
+    )
+
+    window.geometry(
+        "450x300"
+    )
+
+    tk.Label(
+        window,
+        text="Search Product",
+        font=("Arial", 20, "bold")
+    ).pack(
+        pady=25
+    )
+
+    entry = tk.Entry(
+        window,
+        width=30,
+        font=("Arial", 12)
+    )
+
+    entry.pack(
+        pady=10
+    )
+
+    result = tk.Label(
+        window,
+        text="",
+        font=("Arial", 12)
+    )
+
+    result.pack(
+        pady=20
+    )
+
+    def search():
+
+        query = entry.get().lower().strip()
+
+        found = []
+
+        for name, data in products.items():
+
+            if query in name.lower():
+
+                found.append(
+                    f"{name} | "
+                    f"₹{data['price']:.2f} | "
+                    f"Stock: {data['quantity']}"
+                )
+
+        if found:
+
+            result.config(
+                text="\n".join(found)
+            )
+
+        else:
+
+            result.config(
+                text="Product not found."
+            )
+
+    tk.Button(
+        window,
+        text="SEARCH",
+        command=search,
+        width=18
+    ).pack()
 
 
-# =========================
+# =========================================================
 # LOW STOCK
-# =========================
+# =========================================================
 
 def show_low_stock():
 
@@ -827,9 +1941,15 @@ def show_low_stock():
 
     tk.Label(
         content,
-        text="Low Stock Products",
-        font=("Arial", 24, "bold")
-    ).pack(pady=20)
+        text="Low Stock Alerts",
+        font=("Arial", 26, "bold"),
+        bg=BG,
+        fg=TEXT
+    ).pack(
+        anchor="w",
+        padx=35,
+        pady=25
+    )
 
     found = False
 
@@ -845,135 +1965,36 @@ def show_low_stock():
                     f"⚠️ {name} — "
                     f"{data['quantity']} remaining"
                 ),
-                font=("Arial", 16)
-            ).pack(pady=5)
+                font=("Arial", 16),
+                bg=BG,
+                fg=TEXT
+            ).pack(
+                anchor="w",
+                padx=50,
+                pady=8
+            )
 
     if not found:
 
         tk.Label(
             content,
-            text="No low-stock products.",
-            font=("Arial", 16)
-        ).pack(pady=20)
-
-
-# =========================
-# SEARCH
-# =========================
-
-def search_product():
-
-    search_window = tk.Toplevel(root)
-
-    search_window.title(
-        "Search Product"
-    )
-
-    search_window.geometry(
-        "400x250"
-    )
-
-    tk.Label(
-        search_window,
-        text="Search Product",
-        font=("Arial", 18, "bold")
-    ).pack(pady=20)
-
-    search_entry = tk.Entry(
-        search_window,
-        font=("Arial", 14),
-        width=25
-    )
-
-    search_entry.pack(pady=10)
-
-    result_label = tk.Label(
-        search_window,
-        text="",
-        font=("Arial", 12)
-    )
-
-    result_label.pack(pady=10)
-
-    def search():
-
-        query = (
-            search_entry
-            .get()
-            .lower()
-            .strip()
+            text="✓ No low-stock products.",
+            font=("Arial", 16),
+            bg=BG,
+            fg=TEXT
+        ).pack(
+            pady=30
         )
 
-        results = []
 
-        for name, data in products.items():
-
-            if query in name.lower():
-
-                results.append(
-                    f"{name} | "
-                    f"₹{data['price']:.2f} | "
-                    f"Stock: {data['quantity']}"
-                )
-
-        if results:
-
-            result_label.config(
-                text="\n".join(results)
-            )
-
-        else:
-
-            result_label.config(
-                text="Product not found."
-            )
-
-    tk.Button(
-        search_window,
-        text="Search",
-        command=search,
-        width=15
-    ).pack(pady=10)
-
-
-# =========================
-# DASHBOARD LABELS
-# =========================
-
-products_value_label = tk.Label(
-    font=("Arial", 20, "bold")
-)
-
-stock_value_label = tk.Label(
-    font=("Arial", 20, "bold")
-)
-
-sales_value_label = tk.Label(
-    font=("Arial", 20, "bold")
-)
-
-expenses_value_label = tk.Label(
-    font=("Arial", 20, "bold")
-)
-
-profit_value_label = tk.Label(
-    font=("Arial", 20, "bold")
-)
-
-low_stock_value_label = tk.Label(
-    font=("Arial", 20, "bold")
-)
-
-
-# =========================
+# =========================================================
 # SIDEBAR
-# =========================
+# =========================================================
 
 sidebar = tk.Frame(
     root,
-    width=200,
-    relief="solid",
-    borderwidth=1
+    bg=SIDEBAR,
+    width=220
 )
 
 sidebar.pack(
@@ -981,92 +2002,105 @@ sidebar.pack(
     fill="y"
 )
 
+sidebar.pack_propagate(False)
+
 tk.Label(
     sidebar,
     text="SMART SHOP",
-    font=("Arial", 18, "bold")
-).pack(pady=25)
+    font=("Arial", 20, "bold"),
+    bg=SIDEBAR,
+    fg="white"
+).pack(
+    pady=(35, 5)
+)
+
+tk.Label(
+    sidebar,
+    text="MANAGER",
+    font=("Arial", 10),
+    bg=SIDEBAR,
+    fg="#aeb8c7"
+).pack(
+    pady=(0, 30)
+)
 
 
-def make_button(
-    text,
-    command
-):
+def make_button(text, command):
 
     tk.Button(
         sidebar,
         text=text,
         command=command,
-        width=20,
-        height=2
-    ).pack(pady=5)
+        width=22,
+        height=2,
+        bg=SIDEBAR,
+        fg="white",
+        activebackground="#344054",
+        activeforeground="white",
+        relief="flat",
+        font=("Arial", 10, "bold")
+    ).pack(
+        pady=3
+    )
 
 
 make_button(
-    "📊 Dashboard",
+    "Dashboard",
     show_dashboard
 )
 
 make_button(
-    "➕ Add Product",
+    "Add Product",
     add_product_gui
 )
 
 make_button(
-    "📦 Products",
+    "Products",
     show_products
 )
 
 make_button(
-    "🛒 Record Sale",
+    "Record Sale",
     record_sale_gui
 )
 
 make_button(
-    "🛒 Sales",
+    "Sales History",
     show_sales
 )
 
 make_button(
-    "💸 Add Expense",
+    "Add Expense",
     add_expense_gui
 )
 
 make_button(
-    "💸 Expenses",
+    "Expenses",
     show_expenses
 )
 
 make_button(
-    "📈 Profit",
+    "Profit",
     show_profit
 )
-
 make_button(
-    "🔍 Search",
+    "Sales Analytics",
+    show_analytics
+)
+make_button(
+    "Search",
     search_product
 )
 
 make_button(
-    "⚠️ Low Stock",
+    "Low Stock",
     show_low_stock
 )
 
 
-# =========================
-# CONTENT
-# =========================
-
-content = tk.Frame(root)
-
-content.pack(
-    side="right",
-    fill="both",
-    expand=True
-)
-
-
-# Start application
+# =========================================================
+# START APPLICATION
+# =========================================================
 
 show_dashboard()
 
