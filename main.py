@@ -1,8 +1,34 @@
-products = {}
+import json
+import os
+
+DATA_FILE = "products.json"
+
+
+def load_products():
+    if os.path.exists(DATA_FILE):
+        try:
+            with open(DATA_FILE, "r") as file:
+                return json.load(file)
+        except (json.JSONDecodeError, OSError):
+            print("Could not load saved data. Starting with empty stock.")
+
+    return {}
+
+
+def save_products():
+    with open(DATA_FILE, "w") as file:
+        json.dump(products, file, indent=4)
+
+
+products = load_products()
 
 
 def add_product():
     name = input("Enter product name: ").strip()
+
+    if not name:
+        print("Product name cannot be empty.")
+        return
 
     try:
         price = float(input("Enter price: "))
@@ -16,7 +42,9 @@ def add_product():
         "quantity": quantity
     }
 
-    print("Product added successfully!")
+    save_products()
+
+    print("Product added and saved successfully!")
 
 
 def view_products():
@@ -59,7 +87,10 @@ def sell_product():
 
     total = quantity * products[name]["price"]
 
+    save_products()
+
     print(f"Sale recorded. Total = ₹{total:.2f}")
+    print(f"Remaining stock = {products[name]['quantity']}")
 
 
 def main():
