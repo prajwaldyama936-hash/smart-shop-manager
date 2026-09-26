@@ -5,6 +5,8 @@ PRODUCT_FILE = "products.json"
 EXPENSE_FILE = "expenses.json"
 SALES_FILE = "sales.json"
 
+LOW_STOCK_LIMIT = 5
+
 
 def load_data(filename, default):
     if os.path.exists(filename):
@@ -51,7 +53,6 @@ def add_product():
     }
 
     save_data(PRODUCT_FILE, products)
-
     print("Product added and saved successfully!")
 
 
@@ -63,17 +64,25 @@ def view_products():
     print("\n--- PRODUCTS ---")
 
     for name, data in products.items():
+        stock_warning = ""
+
+        if data["quantity"] <= LOW_STOCK_LIMIT:
+            stock_warning = " ⚠️ LOW STOCK"
+
         print(
             f"{name} | "
             f"Price: ₹{data['price']:.2f} | "
             f"Stock: {data['quantity']}"
+            f"{stock_warning}"
         )
 
 
 def sell_product():
     name = input("Enter product name: ").strip()
 
-    if name not in products:
+    product_name = find_product(name)
+
+    if product_name is None:
         print("Product not found.")
         return
 
@@ -87,16 +96,16 @@ def sell_product():
         print("Quantity must be greater than zero.")
         return
 
-    if quantity > products[name]["quantity"]:
+    if quantity > products[product_name]["quantity"]:
         print("Not enough stock.")
         return
 
-    products[name]["quantity"] -= quantity
+    products[product_name]["quantity"] -= quantity
 
-    total = quantity * products[name]["price"]
+    total = quantity * products[product_name]["price"]
 
     sales.append({
-        "product": name,
+        "product": product_name,
         "quantity": quantity,
         "total": total
     })
@@ -105,7 +114,7 @@ def sell_product():
     save_data(SALES_FILE, sales)
 
     print(f"Sale recorded. Total = ₹{total:.2f}")
-    print(f"Remaining stock = {products[name]['quantity']}")
+    print(f"Remaining stock = {products[product_name]['quantity']}")
 
 
 def add_expense():
@@ -164,6 +173,53 @@ def view_profit():
     print(f"Profit:         ₹{profit:.2f}")
 
 
+def find_product(search_name):
+    search_name = search_name.strip().lower()
+
+    for name in products:
+        if name.lower() == search_name:
+            return name
+
+    return None
+
+
+def search_product():
+    search_name = input("Enter product to search: ").strip().lower()
+
+    found = False
+
+    print("\n--- SEARCH RESULTS ---")
+
+    for name, data in products.items():
+        if search_name in name.lower():
+            print(
+                f"{name} | "
+                f"Price: ₹{data['price']:.2f} | "
+                f"Stock: {data['quantity']}"
+            )
+            found = True
+
+    if not found:
+        print("No matching product found.")
+
+
+def low_stock_report():
+    print("\n--- LOW STOCK REPORT ---")
+
+    found = False
+
+    for name, data in products.items():
+        if data["quantity"] <= LOW_STOCK_LIMIT:
+            print(
+                f"⚠️ {name} | "
+                f"Stock: {data['quantity']}"
+            )
+            found = True
+
+    if not found:
+        print("No products are low in stock.")
+
+
 def main():
     while True:
         print("\n==============================")
@@ -175,7 +231,9 @@ def main():
         print("4. Add expense")
         print("5. View expenses")
         print("6. View profit")
-        print("7. Exit")
+        print("7. Search product")
+        print("8. Low stock report")
+        print("9. Exit")
 
         choice = input("Choose an option: ")
 
@@ -198,6 +256,12 @@ def main():
             view_profit()
 
         elif choice == "7":
+            search_product()
+
+        elif choice == "8":
+            low_stock_report()
+
+        elif choice == "9":
             print("Thank you!")
             break
 

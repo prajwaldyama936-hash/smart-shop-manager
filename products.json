@@ -1,6 +1,10 @@
 {
     "PEN": {
         "price": 5.0,
-        "quantity": 50
+        "quantity": 40
+    },
+    "BOOK": {
+        "price": 50.0,
+        "quantity": 20
     }
 }
