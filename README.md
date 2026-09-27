@@ -1,21 +1,46 @@
-# Smart Shop Manager
+# 🏪 Smart Shop Manager
 
-A simple Python-based inventory and sales management system.
+A desktop-based shop management application built with Python and Tkinter.
 
-## Features
+Smart Shop Manager helps small businesses manage products, inventory, sales, expenses and profit from one simple application.
 
-- Add products
-- View products
-- Track stock
-- Record sales
-- Calculate sale totals
-- Command-line interface
+## 🚀 Features
 
-## Technology
+- 📊 Business Dashboard
+- ➕ Add Products
+- ✏️ Edit Products
+- 📦 Restock Products
+- 🗑️ Delete Products
+- 🛒 Record Sales
+- 🧾 Customer Sales Receipts
+- 📋 Sales History
+- 💸 Expense Tracking
+- 📈 Profit Calculation
+- 🔍 Product Search
+- ⚠️ Low Stock Alerts
+- 📊 Sales Analytics
+- 📄 CSV Reports
+- 💾 Persistent JSON Data Storage
+
+## 🛠️ Technologies Used
 
 - Python
+- Tkinter
+- JSON
+- CSV
+- Git
+- GitHub
 
-## How to Run
+## 💻 Requirements
 
-bash
-python main.py
+- Python 3.x
+- Windows / Linux / macOS
+
+No external Python packages are required.
+
+## ▶️ How to Run
+
+Clone the repository:
+
+```bash
+git clone https://github.com/prajwaldyama936-hash/smart-shop-manager.git
