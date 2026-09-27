@@ -1,0 +1,2 @@
+# Smart Shop Manager
+# Uses Python standard library only

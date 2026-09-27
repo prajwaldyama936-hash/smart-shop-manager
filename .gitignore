@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+
+sales_report.csv
+expenses_report.csv
+products_report.csv
+
+products.json
+sales.json
+expenses.json
